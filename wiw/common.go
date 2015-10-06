@@ -2,6 +2,7 @@ package wiw
 
 import "time"
 
+//Model default  used in all table mappings
 type Model struct {
 	ID        uint      `gorm:"primary_key"`
 	CreatedAt time.Time `json:"created_at,omitempty"`
@@ -20,4 +21,13 @@ type ColleaguesResult struct {
 type UserShift struct {
 	User
 	Shift
+}
+
+func ISOWeeksCount(t time.Time) int {
+
+	tt := time.Date(t.Year(), time.December, 31, 0, 0, 0, 0, t.Location())
+	ordinalDay := tt.YearDay()
+	weekDay := int(tt.Weekday()) - 1
+	return (ordinalDay - weekDay + 10) / 7
+
 }
