@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/now"
+	"strconv"
 	"time"
 )
 
@@ -53,9 +54,9 @@ func (s Shift) String() string {
 	return fmt.Sprintf("ID: %v  ManagerID: %v  EmployeeID: %v", s.ID, s.ManagerID, s.EmployeeID)
 }
 
-func SummarizeShifts(shifts []Shift) map[int][]float64 {
+func SummarizeShifts(shifts []Shift) map[string][]float64 {
 	now.FirstDayMonday = true
-	summary := make(map[int][]float64)
+	summary := make(map[string][]float64)
 
 	for _, value := range shifts {
 		current := value.StartTime
@@ -63,34 +64,35 @@ func SummarizeShifts(shifts []Shift) map[int][]float64 {
 		//advance until beggining of next week
 		next := now.New(current).BeginningOfWeek().AddDate(0, 0, 7)
 		isoYear, isoWeek := current.ISOWeek()
+		isoYearStr := strconv.Itoa(isoYear)
 
 		//build key if not present
-		buildKey(summary, isoYear, current)
+		buildKey(summary, isoYearStr, current)
 
 		//set the first chunk of hours, until next week
-		summary[isoYear][isoWeek-1] += next.Sub(current).Hours()
+		summary[isoYearStr][isoWeek-1] += next.Sub(current).Hours()
 
 		current = next
 
 		//iterate until end of shift
 		for current.Before(value.EndTime) {
 			isoYear, isoWeek = current.ISOWeek()
-
-			buildKey(summary, isoYear, current)
+			isoYearStr = strconv.Itoa(isoYear)
+			buildKey(summary, isoYearStr, current)
 
 			//note: break is part of work time.
 			next = current.Add(time.Hour * HoursPerWeek)
-			summary[isoYear][isoWeek-1] += next.Sub(current).Hours()
+			summary[isoYearStr][isoWeek-1] += next.Sub(current).Hours()
 			current = next
 		}
 		//correct last iteration whole week time, better complexity than having the if inside the loop
-		summary[isoYear][isoWeek-1] -= current.Sub(value.EndTime).Hours()
+		summary[isoYearStr][isoWeek-1] -= current.Sub(value.EndTime).Hours()
 	}
 	return summary
 }
 
 //builds key k with type []float64 with the required capacity for the year(52 or 53)
-func buildKey(m map[int][]float64, k int, t time.Time) {
+func buildKey(m map[string][]float64, k string, t time.Time) {
 	v := ISOWeeksCount(t)
 	if _, exists := m[k]; !exists {
 		m[k] = make([]float64, v)
