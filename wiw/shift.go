@@ -2,6 +2,7 @@ package wiw
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jinzhu/now"
 	"strconv"
@@ -31,10 +32,12 @@ func (s *Shift) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	s.ManagerID = uint(parsed["manager_id"].(float64))
-	s.EmployeeID = uint(parsed["employee_id"].(float64))
-
-	s.BreakTime = parsed["break"].(float64)
+	if parsed["start_time"] == nil {
+		return errors.New("invalid start time")
+	}
+	if parsed["end_time"] == nil {
+		return errors.New("invalid end time")
+	}
 
 	auxTime, err := time.Parse(rfc2822Layout, parsed["start_time"].(string))
 	if err != nil {
@@ -47,6 +50,16 @@ func (s *Shift) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	s.EndTime = auxTime.UTC()
+
+	if parsed["manager_id"] != nil {
+		s.ManagerID = uint(parsed["manager_id"].(float64))
+	}
+	if parsed["employee_id"] != nil {
+		s.EmployeeID = uint(parsed["employee_id"].(float64))
+	}
+
+	s.BreakTime = parsed["break"].(float64)
+
 	return nil
 }
 

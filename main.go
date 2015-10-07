@@ -17,29 +17,27 @@ func main() {
 	repository, err := wiw.NewMySQLRepo("homestead:secret@tcp(localhost:33060)/wheniwork?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		log.Fatal("ERROR: Cannot build repository")
-		log.Fatal(error)
+		log.Fatal(err)
 		return
 	}
 	router := gin.Default()
 	schedulerAPI := schedulerService{repository}
 
 	authMiddleware := router.Group("/", schedulerAPI.Authorization)
-	authMiddleware.POST("/shifts/", schedulerAPI.CreateShift)
-	authMiddleware.GET("/shifts/", schedulerAPI.ViewShiftsByDate)
-
 	setIDMiddleware := authMiddleware.Group("/", schedulerAPI.ValidateID)
+
+	authMiddleware.POST("/shifts/", schedulerAPI.CreateOrUpdateShift)
+	setIDMiddleware.PUT("/shifts/:id", schedulerAPI.CreateOrUpdateShift)
+	authMiddleware.GET("/shifts/", schedulerAPI.ViewShiftsByDate)
 	setIDMiddleware.GET("/users/:id/shifts/", schedulerAPI.ViewShiftsForUser)
-	setIDMiddleware.GET("/users/:id/shifts/summarize", schedulerAPI.SummarizeHoursPerWeek)
-	setIDMiddleware.GET("/users/:id/viewColleagues/", schedulerAPI.ViewColleagues)
+	setIDMiddleware.GET("/users/:id/colleagues/", schedulerAPI.ViewColleagues)
 	setIDMiddleware.GET("/users/:id/managers", schedulerAPI.ViewManagers)
-	setIDMiddleware.PUT("/shifts/:id", schedulerAPI.UpdateShift)
 	setIDMiddleware.GET("/users/:id", schedulerAPI.ViewUser)
 
 	router.Run(":3001")
 }
 
 func (ss *schedulerService) Authorization(c *gin.Context) {
-
 }
 
 func (ss *schedulerService) ValidateID(c *gin.Context) {
@@ -59,26 +57,21 @@ func (ss *schedulerService) ViewShiftsForUser(c *gin.Context) {
 		ss.handleError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"shifts": shifts})
+	result := gin.H{"shifts": shifts}
+	summarize := c.Query("summarize")
+	if summarize != "" {
+		result["summary"] = wiw.SummarizeShifts(shifts)
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func (ss *schedulerService) ViewColleagues(c *gin.Context) {
-	results, err := ss.repository.ColleaguesForUser(c.MustGet("id").(int))
+	colleages, err := ss.repository.ColleaguesForUser(c.MustGet("id").(int))
 	if err != nil {
 		ss.handleError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"colleages": results})
-}
-
-func (ss *schedulerService) SummarizeHoursPerWeek(c *gin.Context) {
-	shifts, err := ss.repository.ShiftsForUser(c.MustGet("id").(int))
-	if err != nil {
-		ss.handleError(c, err)
-		return
-	}
-	weekHours := wiw.SummarizeShifts(shifts)
-	c.JSON(http.StatusOK, gin.H{"weekHours": weekHours})
+	c.JSON(http.StatusOK, gin.H{"colleages": colleages})
 }
 
 func (ss *schedulerService) ViewManagers(c *gin.Context) {
@@ -90,10 +83,30 @@ func (ss *schedulerService) ViewManagers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"managers": managers})
 }
 
-func (ss *schedulerService) CreateShift(c *gin.Context) {
-}
+func (ss *schedulerService) CreateOrUpdateShift(c *gin.Context) {
+	shift := &wiw.Shift{}
 
-func (ss *schedulerService) UpdateShift(c *gin.Context) {
+	if err := c.BindJSON(shift); err != nil {
+		ss.handleError(c, err)
+		return
+	}
+	if shift.ManagerID == 0 {
+		//shift.ManagerID = session
+	}
+
+	if c.Request.Method == "POST" {
+		if err := ss.repository.CreateShift(shift); err != nil {
+			ss.handleError(c, err)
+			return
+		}
+	} else {
+		shift.ID = uint(c.MustGet("id").(int))
+		if err := ss.repository.UpdateOrCreateShift(shift); err != nil {
+			ss.handleError(c, err)
+			return
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"shift": shift})
 }
 
 func (ss *schedulerService) ViewShiftsByDate(c *gin.Context) {
@@ -104,7 +117,7 @@ func (ss *schedulerService) ViewShiftsByDate(c *gin.Context) {
 		ss.handleError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": shifts})
+	c.JSON(http.StatusOK, gin.H{"shifts": shifts})
 }
 
 func (ss *schedulerService) ViewUser(c *gin.Context) {
@@ -119,6 +132,8 @@ func (ss *schedulerService) ViewUser(c *gin.Context) {
 
 func (ss *schedulerService) handleError(c *gin.Context, err error) {
 	if err := err.Error(); err == "record not found" {
-		c.JSON(404, gin.H{"error": "record not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": err})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
 }
