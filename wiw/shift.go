@@ -18,10 +18,10 @@ type Shift struct {
 	Manager    *User     `json:"manager,omitempty"`
 	ManagerID  uint      `json:"manager_id"`
 	Employee   *User     `json:"employee,omitempty"`
-	EmployeeID uint      `json:"employee_id,binding:"required""`
-	BreakTime  float64   `json:"break",binding:"required"` //since go uses float64 for json
-	StartTime  time.Time `json:"start_time",binding:"required",sql:"not null"`
-	EndTime    time.Time `json:"end_time",binding:"required",sql:"not null"`
+	EmployeeID uint      `json:"employee_id" binding:"required"`
+	BreakTime  float64   `json:"break" binding:"required"` //since go uses float64 for json
+	StartTime  time.Time `json:"start_time" binding:"required" sql:"not null"`
+	EndTime    time.Time `json:"end_time" binding:"required" sql:"not null"`
 }
 
 func (s *Shift) UnmarshalJSON(b []byte) error {

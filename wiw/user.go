@@ -6,8 +6,8 @@ import (
 
 type User struct {
 	Model
-	Name  string `json:"name,sql:"not null"`
-	Role  string `json:"role,sql:"not null"`
+	Name  string `json:"name" sql:"not null"`
+	Role  string `json:"role" sql:"not null"`
 	Email string `json:"email,omitempty"`
 	Phone string `json:"phone,omitempty"`
 }
