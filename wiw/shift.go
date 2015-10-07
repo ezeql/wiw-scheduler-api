@@ -80,7 +80,7 @@ func SummarizeShifts(shifts []Shift) map[string][]float64 {
 		isoYearStr := strconv.Itoa(isoYear)
 
 		//build key if not present
-		buildKey(summary, isoYearStr, current)
+		buildKey(summary, isoYear)
 
 		//set the first chunk of hours, until next week
 		summary[isoYearStr][isoWeek-1] += next.Sub(current).Hours()
@@ -91,7 +91,7 @@ func SummarizeShifts(shifts []Shift) map[string][]float64 {
 		for current.Before(value.EndTime) {
 			isoYear, isoWeek = current.ISOWeek()
 			isoYearStr = strconv.Itoa(isoYear)
-			buildKey(summary, isoYearStr, current)
+			buildKey(summary, isoYear)
 
 			//note: break is part of work time.
 			next = current.Add(time.Hour * HoursPerWeek)
@@ -105,8 +105,9 @@ func SummarizeShifts(shifts []Shift) map[string][]float64 {
 }
 
 //builds key k with type []float64 with the required capacity for the year(52 or 53)
-func buildKey(m map[string][]float64, k string, t time.Time) {
-	v := ISOWeeksCount(t)
+func buildKey(m map[string][]float64, y int) {
+	v := ISOWeeksCount(y)
+	k := strconv.Itoa(y)
 	if _, exists := m[k]; !exists {
 		m[k] = make([]float64, v)
 	}

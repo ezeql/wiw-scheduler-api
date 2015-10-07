@@ -2,6 +2,7 @@ package wiw
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -11,7 +12,7 @@ func TestSpec(t *testing.T) {
 	Convey("Given an empty collection of shifts", t, func() {
 		var shifts []Shift
 
-		NoHoursWorked := map[int][]float64{}
+		NoHoursWorked := map[string][]float64{}
 
 		Convey("There should be not any hours worked", func() {
 			summ := SummarizeShifts(shifts)
@@ -28,13 +29,14 @@ func TestSpec(t *testing.T) {
 				summ := SummarizeShifts(shifts)
 
 				year, weekNumber := ts.ISOWeek()
+				yearStr := strconv.Itoa(year)
 				weekNumber-- //iso week number goes from 1 to 52 or 53
 
-				expected := map[int][]float64{
-					year: make([]float64, ISOWeeksCount(ts)),
+				expected := map[string][]float64{
+					yearStr: make([]float64, ISOWeeksCount(ts.Year())),
 				}
 
-				expected[year][weekNumber] = WorkHoursPerDay
+				expected[yearStr][weekNumber] = WorkHoursPerDay
 
 				So(summ, ShouldResemble, expected)
 
@@ -42,7 +44,7 @@ func TestSpec(t *testing.T) {
 					shifts = append(shifts, Shift{StartTime: ts, EndTime: tsPlusAWorkDay})
 					summ = SummarizeShifts(shifts)
 
-					expected[year][weekNumber] = WorkHoursPerDay * 2
+					expected[yearStr][weekNumber] = WorkHoursPerDay * 2
 
 					So(summ, ShouldResemble, expected)
 				})
@@ -60,17 +62,17 @@ func TestSpec(t *testing.T) {
 			t1 := time.Date(2015, time.December, 31, 0, 0, 0, 0, time.UTC)
 			t2 := time.Date(2016, time.December, 31, 0, 0, 0, 0, time.UTC)
 
-			expected := map[int][]float64{
-				2015: make([]float64, ISOWeeksCount(t1)),
-				2016: make([]float64, ISOWeeksCount(t2)),
+			expected := map[string][]float64{
+				"2015": make([]float64, ISOWeeksCount(t1.Year())),
+				"2016": make([]float64, ISOWeeksCount(t2.Year())),
 			}
 
-			expected[2015][ISOWeeksCount(t1)-1] = 72
-			expected[2016][0] = HoursPerWeek
-			expected[2016][1] = HoursPerWeek
-			expected[2016][2] = HoursPerWeek
-			expected[2016][3] = HoursPerWeek
-			expected[2016][4] = HoursPerWeek - expected[2015][ISOWeeksCount(t1)-1]
+			expected["2015"][ISOWeeksCount(t1.Year())-1] = 72
+			expected["2016"][0] = HoursPerWeek
+			expected["2016"][1] = HoursPerWeek
+			expected["2016"][2] = HoursPerWeek
+			expected["2016"][3] = HoursPerWeek
+			expected["2016"][4] = HoursPerWeek - expected["2015"][ISOWeeksCount(t1.Year())-1]
 
 			So(summ, ShouldResemble, expected)
 
