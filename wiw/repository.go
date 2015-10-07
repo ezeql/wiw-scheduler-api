@@ -6,6 +6,7 @@ type Repository interface {
 	ColleaguesForUser(ID int) ([]ColleaguesResult, error)
 	ManagersForUser(ID int) ([]User, error)
 	UserDetails(ID int) (User, error)
-	UpdateShift() (Shift, error)
+	CreateShift(shift *Shift) error
+	UpdateOrCreateShift(shift *Shift) error
 	ShiftsInRange(string, string) ([]Shift, error)
 }

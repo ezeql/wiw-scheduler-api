@@ -1,8 +1,7 @@
 package wiw
 
 import (
-	"fmt"
-	_ "github.com/go-sql-driver/mysql" //side effects
+	_ "github.com/go-sql-driver/mysql" //side effects for mysql
 	"github.com/jinzhu/gorm"
 	"strconv"
 )
@@ -11,6 +10,7 @@ type MySQLRepository struct {
 	gorm.DB
 }
 
+//NewMySQLRepo builds and initializes a MySQL db conncetion using passed dns arguments
 func NewMySQLRepo(dsn string) (*MySQLRepository, error) {
 	var err error
 	r := &MySQLRepository{}
@@ -25,14 +25,11 @@ func NewMySQLRepo(dsn string) (*MySQLRepository, error) {
 }
 
 func (r *MySQLRepository) ShiftsForUser(ID int) ([]Shift, error) {
-
 	user := User{}
 	shifts := []Shift{}
-
 	if result := r.First(&user, ID); result.Error != nil {
 		return nil, result.Error
 	}
-
 	result := r.DB.Model(&user).Related(&shifts, "EmployeeID")
 	return shifts, result.Error
 }
@@ -67,28 +64,13 @@ func (r *MySQLRepository) ShiftsInRange(from string, to string) ([]Shift, error)
 func (r *MySQLRepository) UserDetails(ID int) (User, error) {
 	user := User{}
 	result := r.First(&user, ID)
-	fmt.Println("%v", result.Error)
-
 	return user, result.Error
 }
 
-func (r *MySQLRepository) UpdateShift() (Shift, error) {
-	newShift := Shift{}
-	// shift := &Shift{}
-	//shiftID := c.Param("id")
-	/*
-		if err := c.BindJSON(&newShift); err == nil {
-			if r.First(&shift, shiftID).RecordNotFound() {
-				forcedID, _ := strconv.Atoi(shiftID)
-				newShift.ID = uint(forcedID)
-				r.Create(&newShift)
-				c.JSON(200, &newShift)
-			} else {
-				r.Model(&shift).Updates(&newShift)
-				c.JSON(200, &shift)
-			}
-		} else {
-			c.JSON(http.StatusBadRequest, err.Error())
-		}*/
-	return newShift, nil
+func (r *MySQLRepository) CreateShift(shift *Shift) error {
+	return r.Create(shift).Error
+}
+
+func (r *MySQLRepository) UpdateOrCreateShift(shift *Shift) error {
+	return r.Where(shift).FirstOrCreate(shift).Error
 }
