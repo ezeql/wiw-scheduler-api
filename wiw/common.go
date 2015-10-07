@@ -24,10 +24,10 @@ type UserShift struct {
 }
 
 func ISOWeeksCount(t time.Time) int {
-
-	tt := time.Date(t.Year(), time.December, 31, 0, 0, 0, 0, t.Location())
-	ordinalDay := tt.YearDay()
-	weekDay := int(tt.Weekday()) - 1
-	return (ordinalDay - weekDay + 10) / 7
-
+	tt := time.Date(t.Year(), time.December, 31, 0, 0, 0, 0, time.UTC)
+	_, week := tt.ISOWeek()
+	if week == 53 {
+		return 53
+	}
+	return 52
 }
