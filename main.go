@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/ezeql/wiw-scheduler-api/wiw"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -122,7 +121,6 @@ func (ss *schedulerService) ViewShiftsByDate(c *gin.Context) {
 
 func (ss *schedulerService) ViewUser(c *gin.Context) {
 	user, err := ss.repository.UserDetails(c.MustGet("id").(int))
-	fmt.Println("%v", err)
 	if err != nil {
 		ss.handleError(c, err)
 		return
