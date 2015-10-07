@@ -23,8 +23,8 @@ type UserShift struct {
 	Shift
 }
 
-func ISOWeeksCount(t time.Time) int {
-	tt := time.Date(t.Year(), time.December, 31, 0, 0, 0, 0, time.UTC)
+func ISOWeeksCount(y int) int {
+	tt := time.Date(y, time.December, 31, 0, 0, 0, 0, time.UTC)
 	_, week := tt.ISOWeek()
 	if week == 53 {
 		return 53
