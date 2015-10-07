@@ -1,4 +1,8 @@
 # wiw-scheduler-api
+
+[![Build Status](https://travis-ci.org/ezeql/wiw-scheduler-api.svg)](https://travis-ci.org/ezeql/wiw-scheduler-api)
+
+
 WIW Scheduler API Test
 
 Deps:
