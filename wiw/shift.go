@@ -39,7 +39,7 @@ func (s *Shift) UnmarshalJSON(b []byte) error {
 
 	auxTime, err := time.Parse(rfc2822Layout, parsed["start_time"].(string))
 	if err != nil {
-		return errors.new("invalid start time")
+		return errors.New("invalid start time")
 	}
 	s.StartTime = auxTime.UTC()
 
@@ -49,7 +49,7 @@ func (s *Shift) UnmarshalJSON(b []byte) error {
 
 	auxTime, err = time.Parse(rfc2822Layout, parsed["end_time"].(string))
 	if err != nil {
-		return errors.new("invalid end time")
+		return errors.New("invalid end time")
 	}
 	s.EndTime = auxTime.UTC()
 
