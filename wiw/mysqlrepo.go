@@ -38,10 +38,10 @@ func (r *MySQLRepository) ColleaguesForUser(ID int) ([]ColleaguesResult, error) 
 	results := []ColleaguesResult{}
 	IDStr := strconv.Itoa(ID)
 	result := r.Table("shifts as s").
-		Select("ss.id as shift_id, ss.employee_id as colleague_id, ss.start_time as colleague_start_time," +
-		"ss.end_time as colleague_end_time,s.start_time as employee_start_time," +
-		"s.end_time as employee_end_time").
-		Joins("inner join shifts as ss on s.employee_id = " + IDStr + " AND ss.employee_id !=" + IDStr).
+		Select("ss.id AS shift_id, ss.employee_id AS colleague_id, ss.start_time AS colleague_start_time," +
+		"ss.end_time AS colleague_end_time,s.start_time AS employee_start_time," +
+		"s.end_time AS employee_end_time").
+		Joins("INNER JOIN shifts AS ss ON s.employee_id = " + IDStr + " AND ss.employee_id !=" + IDStr).
 		Where("s.start_time < ss.end_time AND s.end_time > ss.start_time").
 		Find(&results)
 
