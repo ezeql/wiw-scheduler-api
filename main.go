@@ -20,7 +20,7 @@ func main() {
 	repository, err := wiw.NewMySQLRepo(dsn)
 	if err != nil {
 		log.Println("ERROR: Cannot build repository")
-		log.Println(e)
+		log.Println(err)
 		log.Fatal("Exiting...")
 		return
 	}
