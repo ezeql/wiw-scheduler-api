@@ -13,10 +13,15 @@ type schedulerService struct {
 }
 
 func main() {
-	repository, err := wiw.NewMySQLRepo("homestead:secret@tcp(localhost:33060)/wheniwork?charset=utf8&parseTime=True&loc=Local")
+
+	//move this into an env
+	dsn := "homestead:secret@tcp(localhost:33060)/wheniwork?charset=utf8&parseTime=True&loc=Local"
+
+	repository, err := wiw.NewMySQLRepo(dsn)
 	if err != nil {
-		log.Fatal("ERROR: Cannot build repository")
-		log.Fatal(err)
+		log.Println("ERROR: Cannot build repository")
+		log.Println(e)
+		log.Fatal("Exiting...")
 		return
 	}
 	router := gin.Default()
@@ -42,7 +47,7 @@ func (ss *schedulerService) Authorization(c *gin.Context) {
 func (ss *schedulerService) ValidateID(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, "Invalid User Id")
+		c.JSON(http.StatusBadRequest,  gin.H{"error": "Invalid User Id"} )
 		c.Abort()
 		return
 	}
@@ -90,7 +95,7 @@ func (ss *schedulerService) CreateOrUpdateShift(c *gin.Context) {
 		return
 	}
 	if shift.ManagerID == 0 {
-		//shift.ManagerID = session
+		//TODO: should use current user id
 	}
 
 	if c.Request.Method == "POST" {
@@ -129,9 +134,7 @@ func (ss *schedulerService) ViewUser(c *gin.Context) {
 }
 
 func (ss *schedulerService) handleError(c *gin.Context, err error) {
-	if err := err.Error(); err == "record not found" {
+		//TODO: return appropiate http code based on error type
 		c.JSON(http.StatusNotFound, gin.H{"error": err})
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 	}
 }
