@@ -19,11 +19,12 @@ type Shift struct {
 	ManagerID  uint      `json:"manager_id"`
 	Employee   *User     `json:"employee,omitempty"`
 	EmployeeID uint      `json:"employee_id" binding:"required"`
-	BreakTime  float64   `json:"break" binding:"required"` //since go uses float64 for json
+	BreakTime  float64   `json:"break" binding:"required"`
 	StartTime  time.Time `json:"start_time" binding:"required" sql:"not null"`
 	EndTime    time.Time `json:"end_time" binding:"required" sql:"not null"`
 }
 
+//workaround since gorm wont recognize time.Time composed types
 func (s *Shift) UnmarshalJSON(b []byte) error {
 	const rfc2822Layout = "Mon Jan 02 15:04:05 -0700 2006"
 	var parsed map[string]interface{}
@@ -33,32 +34,44 @@ func (s *Shift) UnmarshalJSON(b []byte) error {
 	}
 
 	if parsed["start_time"] == nil {
-		return errors.New("invalid start time")
-	}
-	if parsed["end_time"] == nil {
-		return errors.New("invalid end time")
+		return errors.New("missing start time")
 	}
 
 	auxTime, err := time.Parse(rfc2822Layout, parsed["start_time"].(string))
 	if err != nil {
-		return err
+		return errors.new("invalid start time")
 	}
 	s.StartTime = auxTime.UTC()
 
+	if parsed["end_time"] == nil {
+		return errors.New("missing end time")
+	}
+
 	auxTime, err = time.Parse(rfc2822Layout, parsed["end_time"].(string))
 	if err != nil {
-		return err
+		return errors.new("invalid end time")
 	}
 	s.EndTime = auxTime.UTC()
 
 	if parsed["manager_id"] != nil {
-		s.ManagerID = uint(parsed["manager_id"].(float64))
-	}
-	if parsed["employee_id"] != nil {
-		s.EmployeeID = uint(parsed["employee_id"].(float64))
+		id, ok := parsed["manager_id"].(float64)
+		if !ok {
+			return errors.New("invalid manager_id")
+		}
+		s.ManagerID = uint(id)
 	}
 
-	s.BreakTime = parsed["break"].(float64)
+	if parsed["employee_id"] != nil {
+		id, ok := parsed["employee_id"].(float64)
+		if !ok {
+			return errors.New("invalid employee_id")
+		}
+		s.EmployeeID = uint(id)
+	}
+
+	if parsed["break"] == nil {
+
+	}
 
 	return nil
 }
