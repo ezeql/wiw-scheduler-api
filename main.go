@@ -47,7 +47,7 @@ func (ss *schedulerService) Authorization(c *gin.Context) {
 func (ss *schedulerService) ValidateID(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest,  gin.H{"error": "Invalid User Id"} )
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User Id"})
 		c.Abort()
 		return
 	}
@@ -134,7 +134,7 @@ func (ss *schedulerService) ViewUser(c *gin.Context) {
 }
 
 func (ss *schedulerService) handleError(c *gin.Context, err error) {
-		//TODO: return appropiate http code based on error type
-		c.JSON(http.StatusNotFound, gin.H{"error": err})
-	}
+	//TODO: return appropiate http code based on error type
+	c.JSON(http.StatusNotFound, gin.H{"error": err})
+
 }
